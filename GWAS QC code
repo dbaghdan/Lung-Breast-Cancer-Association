@@ -1,0 +1,45 @@
+This code was written for plink and used files that were already in Plink binary. 
+
+1:Check sex and calculate call rates for flagging poorly called SNPs and individuals
+  plink --bfile GENEVA_LungCancer_CODAO_v2 --set-hh-missing --make-bed --out ~/danny/LungCancer
+
+2:Recalculate individual call rates after removing SNPs with call rates <99%
+  plink --bfile GENEVA_LungCancer_CODAO_v2 --geno 0.01 --make-bed --out ~/danny/LungCancer.geno1
+  plink --bfile GENEVA_LungCancer_CODAO_v2 --geno 0.01 --missing --out ~/danny/LungCancer.geno1
+  
+3:Calculate HWE statistics to flag SNPs later
+  plink --bfile ~/danny/LungCancer.geno1 --hardy --out ~/danny/LungCancer.geno1
+
+4:LD prune (rm 1 SNP if r2>0.3 in 50 SNP window) for relationship check and heterozygosity calculation
+  plink --bfile ~/danny/LungCancer.geno1 --indep-pairwise 50 5 0.3 --out ~/danny/LungCancer.geno1
+  
+Relationship check
+  plink --bfile ~/danny/LungCancer.geno1 --extract ~/danny/LungCancer.geno1.prune.in --genome --min 0.05 --out ~/danny/LungCancer.geno1.LD0.3
+  awk '$10 >= 0.05 {print $1, $2}' ~/Desktop/LungCancer.geno1.LD0.3.genome > outliers.txt
+  plink --bfile ~/danny/LungCancer.geno1 --extract ~/danny/LungCancer.geno1.prune.in --remove ~/outliers.txt --genome --out ~/danny/LungCancer.geno1.LD0.3.rmPIHAT0.05
+  awk '$10 >= 0.1 {print $1, $2}' ~/danny/LungCancer.geno1.LD0.3.rmPIHAT0.05.genome > outliers1.txt
+
+Outliers Removed
+
+Check heterozygosity (across all autosomal SNPs) -- look at that distribution across individuals to check for and rm outliers (F: mean +/-3 sd), see 03_GWAS_QC_plots.Rmd.
+  plink --bfile ~/danny/LungCancer.geno1 --het --extract ~/danny/LungCancer.geno1.prune.in --remove ~/outliers.txt --out ~/danny/LungCancer.geno1.HupHup
+  (Use R to check and append values to outlier.txt)
+  plink --bfile ~/danny/LungCancer.geno1 --extract ~/danny/LungCancer.geno1.prune.in --remove ~/outliers.txt --genome --out ~/danny/LungCancer.geno1.all.out
+
+5: Prepare genotype files for PCA
+  plink --bfile ~/danny/LungCancer.geno1 --remove outliers.txt --make-bed --out LungCancer.pure
+  plink --bfile LungCancer.pure --bmerge ~/mount/wheelerlab1/Data/HAPMAP3_hg18/HM3_ASN_CEU_YRI_Unrelated_hg18_noAmbig.bed ~/mount/wheelerlab1/Data/HAPMAP3_hg18/HM3_ASN_CEU_YRI_Unrelated_hg18_noAmbig.bim ~/mount/wheelerlab1/Data/HAPMAP3_hg18/HM3_ASN_CEU_YRI_Unrelated_hg18_noAmbig.fam --make-bed --out LGpure
+  plink -—bfile ~/mount/wheelerlab1/Data/HAPMAP3_hg18/HM3_ASN_CEU_YRI_Unrelated_hg18_noAmbig --exclude LGpure-merge.missnp --make-bed --out LGPCA
+  plink --bfile LungCancer.pure --bmerge LGPCA.bed LGPCA.bim LGPCA.fam --out LungPCA
+  
+filter merged file to SNPs with >90% genotypes
+  plink --bfile LungPCA --geno 0.2 --maf 0.05 --make-bed --out LPCAgeno2
+  
+make ped and map file and fam file (no -9s) for smartpca
+  plink --bfile LPCAgeno2 --indep-pairwise 50 5 0.2 --recode --out LPCApruned
+  awk '{print $1,$2,$3,$4,$5,1}' LPCAgeno2.fam>LPCApruned.fam
+  
+Run PCA
+
+6: Make post-qc bed/bim/fam 
+  plink --bfile ~/danny/LungCancer.geno1 —keep ~/Desktop/GWASPCAplot.txt --make-bed --out ~/LungCancerQCcomplete
