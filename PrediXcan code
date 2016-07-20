@@ -1,0 +1,8 @@
+Performed in Python
+
+import os
+tisfile=open('/Users/adenine/Desktop/predixcan/dbs.txt','r').read().rstrip()
+tislist=tisfile.split('\n')
+for tis in tislist:
+    command='/Users/adenine/Desktop/predixcan/PrediXcan.py --predict --assoc --weights /Users/adenine/mount/wheelerlab1/Data/PrediXcan_db/GTEx-2015-11-13/'+tis+' --dosages /Users/adenine/Desktop/predixcan/Dosages --dosages_prefix predixcan --pheno /Users/adenine/Desktop/predixcan/Phenotypes.txt --output_dir /Users/adenine/Desktop/predixcan/'+tis+' --logistic'
+    os.system(command)
