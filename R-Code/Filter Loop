@@ -1,0 +1,22 @@
+Goes through the association file of each tissue on a list and filters based on P value
+
+library(dplyr)
+library(sas7bdat)
+library(tidyr)
+path="~/Desktop/predixcan/DGN-WB-unscaled_0.5.db/association.txt"
+Chrome=read.table(path,header=T)
+Chrome=na.omit(Chrome)
+Chrome$Tissue <- rep("DGN",nrow(Chrome))
+x<-scan("~/Desktop/predixcan/dbs.txt",what="",sep="\n")
+x<-strsplit(x,"[[:space:]]+")
+for(item in x){
+  s1="~/Desktop/predixcan/"
+  s2=item
+  s3="/association.txt"
+  path=paste(s1,s2,s3,sep="")
+  Tiss=read.table(path,header=T)
+  Tiss=na.omit(Tiss)
+  Tiss$Tissue <- rep(item,nrow(Tiss))
+  Chrome<-rbind(Chrome,Tiss)
+}
+Chrome<-dplyr::filter(Chrome,p<=1e-5)
