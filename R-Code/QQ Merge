@@ -1,0 +1,46 @@
+Takes two sets of Predixcan Association Data and creates a merged QQ plot
+
+library(dplyr)
+library(ggplot2)
+library(sas7bdat)
+library(tidyr)
+library(qqman)
+source("~/mount/wheelerlab1/Data/qq-man-scripts/qqunif.r")
+Chrome=read.table("~/Desktop/ChrENGene.txt")
+colnames(Chrome)<-c('CHR','gene','gene_name')
+Chrome<-transform(Chrome, CHR=as.numeric(CHR))
+x<-scan("~/Desktop/predixcan/DB3.txt",what="",sep="\n")
+x<-strsplit(x,"[[:space:]]+")
+for(item in x){
+  s1="~/Desktop/predixcan/"
+  s2=item
+  s3="/association_0.01.txt"
+  path=paste(s1,s2,s3,sep="")
+  Tiss=read.table(path,header=T)
+  Tissu=na.omit(Tiss)
+  Tissue<-left_join(Tissu,Chrome, by='gene')
+  s1="Downloads/Pred_assoc/"
+  s3=".txt"
+  path=paste(s1,s2,s3,sep="")
+  Org=read.table(path,header=T)
+  Org=na.omit(Org)
+  Org2=filter(Org,p<=0.05)
+  Tissue2=Tissue[Tissue$gene %in% Org2$gene,]
+  nn=length(Tissue2$p)
+  xx= -log10((1:nn)/(nn+1))
+  s1="~/Desktop/PredixcanPlots/MergedPlots/"
+  s3="_mergeqq_0.01.jpg"
+  path=paste(s1,s2,s3,sep="")
+  Tissue2=Tissue2[rev(order(Tissue2$p)),]
+  jpeg(file = path)
+  qqunif(Tissue$p,plot=T, BH=F)
+  points(sort(xx), sort(-log10(Tissue2$p)), col="red")
+  Tissue2=filter(Tissue2,p<=0.005)
+  nn=length(Tissue2$p)
+  xx= -log10((1:nn)/(nn+1))
+  if(nrow(Tissue2)!=0){
+    text(sort(xx), y=sort(-log10(Tissue2$p)), labels = (Tissue2$gene), adj = -1.5)
+  }
+  legend('bottomright', c("Genes for Breast Cancer", "All Genes"), col=c("red","black"), pch=19,cex=1)
+  dev.off()
+}
