@@ -1,0 +1,32 @@
+Creates a Manhattan and QQ plot for the association file of each tissue on a list
+
+library(dplyr)
+library(ggplot2)
+library(sas7bdat)
+library(tidyr)
+library(qqman)
+Chrome=read.table("~/Desktop/ChrENGene.txt")
+colnames(Chrome)<-c('CHR','gene','gene_name')
+Chrome<-transform(Chrome, CHR=as.numeric(CHR))
+x<-scan("~/Desktop/predixcan/dbs.txt",what="",sep="\n")
+x<-strsplit(x,"[[:space:]]+")
+for(item in x){
+  s1="~/Desktop/predixcan/"
+  s2=item
+  s3="/association_0.1.txt"
+  path=paste(s1,s2,s3,sep="")
+  Tiss=read.table(path,header=T)
+  Tissu=na.omit(Tiss)
+  Tissue<-left_join(Tissu,Chrome, by='gene')
+  s1="~/Desktop/PredixcanPlots/"
+  s3="_qqplot_0.1.jpg"
+  path=paste(s1,s2,s3,sep="")
+  jpeg(file = path)
+  qq(Tissue$p, main='QQplot of Tissue', psh=18)
+  dev.off()
+  s3="_manplot_0.1.jpg"
+  path=paste(s1,s2,s3,sep="")
+  jpeg(filename = path)
+  print(ggplot(Tissue, aes(x=CHR, y=-log10(p),color=CHR)) +geom_point(aes(size = 10,)) + geom_text(aes(label=ifelse(-log10(p)>4.7,as.character(gene_name),'')),hjust= 1.2, vjust=0) + ggtitle("Manhattan Plot Tissue") + xlab("Chromosome") + ylab("-log10(p)") + theme_set(theme_gray(base_size = 18))+ theme(legend.position="none") + scale_x_continuous(breaks=seq(1,25,1)))
+  dev.off()
+  }
