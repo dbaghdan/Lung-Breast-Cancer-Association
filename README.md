@@ -1,2 +1,4 @@
 # Lung-Breast-Cancer-Association
-This is incomplete. We will work on this soon
+1. GWAS QC
+2. PrediXcan
+3. R Code
