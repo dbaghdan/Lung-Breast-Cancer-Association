@@ -1,4 +1,5 @@
-Performed in Python
+#Performed in Python
+#Details and software for the PrediXcan method available at https://github.com/hakyim/PrediXcan
 
 import os
 tisfile=open('/Users/adenine/Desktop/predixcan/dbs.txt','r').read().rstrip()
