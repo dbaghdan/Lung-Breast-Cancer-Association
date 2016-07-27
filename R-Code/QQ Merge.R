@@ -1,10 +1,12 @@
-Takes two sets of Predixcan Association Data and creates a merged QQ plot
+#Takes two sets of Predixcan Association Data and creates a merged QQ plot
 
+#Open relevant Libraries
 library(dplyr)
 library(ggplot2)
 library(sas7bdat)
 library(tidyr)
 library(qqman)
+#Open qqunif
 source("~/mount/wheelerlab1/Data/qq-man-scripts/qqunif.r")
 Chrome=read.table("~/Desktop/ChrENGene.txt")
 colnames(Chrome)<-c('CHR','gene','gene_name')
